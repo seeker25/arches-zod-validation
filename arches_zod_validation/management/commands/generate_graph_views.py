@@ -48,7 +48,7 @@ from arches.app.models import models
 
 TEMPLATE_DIR = Path(__file__).resolve().parent / "templates"
 
-# Default verbs assigned to a newly-seen resource in generated/generate.json.
+# Default verbs assigned to a newly-seen resource in views/generate.json.
 # Hand-edit afterward; regeneration reads, never clobbers. An empty list ([])
 # excludes the resource from generation.
 DEFAULT_VERBS = ["GET"]
@@ -220,7 +220,7 @@ class Command(BaseCommand):
         return template.render(Context(context, autoescape=False))
 
     def load_manifest(self, path):
-        """Read the slug -> verbs map from generated/generate.json (single
+        """Read the slug -> verbs map from generate.json (single
         manifest for all resources). Returns {} when absent; missing slugs are
         filled with defaults below. An empty verb list excludes the resource."""
         if path.exists():
@@ -283,7 +283,7 @@ class Command(BaseCommand):
         skipped = 0
         excluded = 0
 
-        manifest_path = generated_dir / "generate.json"
+        manifest_path = views_dir / "generate.json"
         manifest = self.load_manifest(manifest_path)
 
         for graph in graphs:
