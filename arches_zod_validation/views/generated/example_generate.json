@@ -1,0 +1,5 @@
+{
+  "contributor": ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  "heritage_site": ["GET"],
+  "internal_audit_log": []
+}

@@ -22,7 +22,7 @@ from {{ project }}.views.generated import (
 
 urlpatterns = [
 {% for entry in entries %}    path(
-        "{{ url_prefix }}{{ entry.module_name }}/",
+        "{{ url_prefix }}{{ entry.module_name }}",
         {{ entry.class_prefix }}ListView.as_view(),
         name="api_{{ entry.module_name }}_list",
     ),
