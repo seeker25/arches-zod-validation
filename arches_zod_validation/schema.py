@@ -316,14 +316,27 @@ def _geojson_node_value(max_length):
     }
 
 
+def _date_node_value(max_length):
+    # Arches date nodes serialize node_value as a bare date (YYYY-MM-DD) but the
+    # field maps to date-time; accept either (anyOf becomes a zod union).
+    return {
+        "nullable": True,
+        "anyOf": [
+            {"type": "string", "format": "date"},
+            {"type": "string", "format": "date-time"},
+        ],
+    }
+
+
 # datatype -> node_value shape builder(max_length). Shapes mirror the arches API
 # payload; string-family and concept-list honor a widget maxLength, the rest
-# ignore it. Datatypes absent here (boolean/date/number) derive node_value from
-# the field's base type.
+# ignore it. Datatypes absent here (boolean/number) derive node_value from the
+# field's base type.
 _NODE_VALUE_BUILDERS = {
     "string": _string_node_value,
     "non-localized-string": _scalar_string_node_value,
     "borden-number-datatype": _scalar_string_node_value,
+    "date": _date_node_value,
     "concept": _concept_node_value,
     "concept-list": _concept_list_node_value,
     "reference": _reference_node_value,
@@ -438,7 +451,11 @@ class AliasedNodeDataExtension(OpenApiSerializerFieldExtension):
         for modeled datatypes, else the field's base type (boolean/date/number).
         bypass_extensions stops this extension from recursing on the fallback."""
         builder = _NODE_VALUE_BUILDERS.get(datatype)
-        if builder is not None:
+        if datatype == "string" and direction == "request":
+            # On write the arches string datatype takes a plain string and
+            # localizes it; the i18n object is response-only.
+            schema = _scalar_string_node_value(self._max_length())
+        elif builder is not None:
             schema = builder(self._max_length())
         else:
             schema = auto_schema._map_serializer_field(
