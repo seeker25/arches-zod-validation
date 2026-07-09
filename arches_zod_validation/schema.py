@@ -451,11 +451,7 @@ class AliasedNodeDataExtension(OpenApiSerializerFieldExtension):
         for modeled datatypes, else the field's base type (boolean/date/number).
         bypass_extensions stops this extension from recursing on the fallback."""
         builder = _NODE_VALUE_BUILDERS.get(datatype)
-        if datatype == "string" and direction == "request":
-            # On write the arches string datatype takes a plain string and
-            # localizes it; the i18n object is response-only.
-            schema = _scalar_string_node_value(self._max_length())
-        elif builder is not None:
+        if builder is not None:
             schema = builder(self._max_length())
         else:
             schema = auto_schema._map_serializer_field(
