@@ -251,6 +251,9 @@ def _resource_reference():
 
 
 def _resource_instance_node_value(max_length):
+    # A single resource-instance still stores (and reads back) as a one-element
+    # list, so the response node_value is an array. A write accepts a bare
+    # object; the response shape is fixed up per-direction in _node_value_schema.
     return {**_resource_reference(), "nullable": True}
 
 
@@ -453,6 +456,11 @@ class AliasedNodeDataExtension(OpenApiSerializerFieldExtension):
         builder = _NODE_VALUE_BUILDERS.get(datatype)
         if builder is not None:
             schema = builder(self._max_length())
+            # A single resource-instance stores as a one-element list, so its
+            # read representation's node_value is an array. A write still accepts
+            # a bare object, so only the response is widened to the array shape.
+            if datatype == "resource-instance" and direction == "response":
+                schema = _resource_instance_list_node_value(self._max_length())
         else:
             schema = auto_schema._map_serializer_field(
                 self.target, direction, bypass_extensions=True
