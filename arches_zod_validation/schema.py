@@ -320,14 +320,18 @@ def _geojson_node_value(max_length):
 
 
 def _date_node_value(max_length):
-    # Arches date nodes serialize node_value as a bare date (YYYY-MM-DD) but the
-    # field maps to date-time; accept either (anyOf becomes a zod union).
+    # Arches date nodes serialize node_value as a bare date (YYYY-MM-DD) or a
+    # space-separated datetime (YYYY-MM-DD HH:MM:SS[+HH:MM]), neither of which is
+    # the strict ISO the generator's z.iso.datetime demands. A pattern (which
+    # becomes z.string().regex, not z.iso) describes arches' real output: an
+    # optional time, space or T separator, optional offset.
     return {
         "nullable": True,
-        "anyOf": [
-            {"type": "string", "format": "date"},
-            {"type": "string", "format": "date-time"},
-        ],
+        "pattern": (
+            r"^\d{4}-\d{2}-\d{2}"
+            r"([ T]\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)?)?$"
+        ),
+        "type": "string",
     }
 
 
