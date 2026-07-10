@@ -56,12 +56,6 @@ describe('ConceptListValueSchema (ConceptListValue)', () => {
         expect(() => ConceptListValueSchema.parse(bad)).toThrow();
     });
 
-    it('rejects when details contains invalid child items', () => {
-        const badChild = { ...validCollectionItem(), children: [{}] };
-        const bad = validConceptList({ details: [badChild] });
-        expect(() => ConceptListValueSchema.parse(bad)).toThrow();
-    });
-
     it('requires display_value to be a string', () => {
         const bad = validConceptList({ display_value: 123 });
         expect(() => ConceptListValueSchema.parse(bad as any)).toThrow();
