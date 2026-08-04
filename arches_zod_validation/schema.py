@@ -251,7 +251,10 @@ def _resource_reference():
 
 
 def _resource_instance_node_value(max_length):
-    return {**_resource_reference(), "nullable": True}
+    # A single resource-instance stores (and reads back) as a one-element list,
+    # so its node_value is an array, same as resource-instance-list. A write
+    # accepts either the array or a bare object; the array is the canonical form.
+    return _resource_instance_list_node_value(max_length)
 
 
 def _resource_instance_list_node_value(max_length):
@@ -316,14 +319,31 @@ def _geojson_node_value(max_length):
     }
 
 
+def _date_node_value(max_length):
+    # Arches date nodes serialize node_value as a bare date (YYYY-MM-DD) or a
+    # space-separated datetime (YYYY-MM-DD HH:MM:SS[+HH:MM]), neither of which is
+    # the strict ISO the generator's z.iso.datetime demands. A pattern (which
+    # becomes z.string().regex, not z.iso) describes arches' real output: an
+    # optional time, space or T separator, optional offset.
+    return {
+        "nullable": True,
+        "pattern": (
+            r"^\d{4}-\d{2}-\d{2}"
+            r"([ T]\d{2}:\d{2}:\d{2}([+-]\d{2}:\d{2}|Z)?)?$"
+        ),
+        "type": "string",
+    }
+
+
 # datatype -> node_value shape builder(max_length). Shapes mirror the arches API
 # payload; string-family and concept-list honor a widget maxLength, the rest
-# ignore it. Datatypes absent here (boolean/date/number) derive node_value from
-# the field's base type.
+# ignore it. Datatypes absent here (boolean/number) derive node_value from the
+# field's base type.
 _NODE_VALUE_BUILDERS = {
     "string": _string_node_value,
     "non-localized-string": _scalar_string_node_value,
     "borden-number-datatype": _scalar_string_node_value,
+    "date": _date_node_value,
     "concept": _concept_node_value,
     "concept-list": _concept_list_node_value,
     "reference": _reference_node_value,
