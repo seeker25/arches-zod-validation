@@ -17,6 +17,18 @@ from arches_querysets.rest_framework.serializers import (
 logger = logging.getLogger(__name__)
 
 
+def resource_aliased_data_component(graph_slug, exclude_children=False):
+    """Component name a graph's resource-level aliased_data is registered under.
+    Callers that $ref it by string must go through this, or a rename here leaves
+    them pointing at nothing."""
+    kind = (
+        "resource_top_nodegroups_aliased_data"
+        if exclude_children
+        else "resource_aliased_data"
+    )
+    return f"{graph_slug}_{kind}".title()
+
+
 def _sort_properties_in_place(node, sortorder):
     """Reorder Arches tile-bag properties (all keys node aliases) by node
     sortorder, then alias; leave other maps in declared order."""
@@ -500,12 +512,9 @@ class ArchesTileAutoSchema(AutoSchema):
         # first graph processed wins and all resources share its fields.
         if isinstance(serializer, ResourceAliasedDataSerializer):
             if serializer.graph_slug:
-                kind = (
-                    "resource_top_nodegroups_aliased_data"
-                    if serializer.Meta.exclude_children
-                    else "resource_aliased_data"
+                return resource_aliased_data_component(
+                    serializer.graph_slug, serializer.Meta.exclude_children
                 )
-                return f"{serializer.graph_slug}_{kind}".title()
         if isinstance(serializer, TileAliasedDataSerializer):
             # Resolving .fields runs the DB introspection that pins _root_node
             # to the nodegroup's grouping Node.
